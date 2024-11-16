@@ -5,3 +5,7 @@ const (
 	RoleAdmin                  = "admin"
 	RoleCustomer               = "customer"
 )
+
+type contextKey string
+
+const UserContextKey = contextKey("user")

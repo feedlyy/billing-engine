@@ -1,6 +1,7 @@
 package router
 
 import (
+	_const "billingg-engine/const"
 	"billingg-engine/model"
 	"context"
 	"encoding/json"
@@ -15,20 +16,10 @@ import (
 
 var jwtKey = []byte("very_secret_key")
 
-type UserClaims struct {
-	Username string `json:"username"`
-	Role     string `json:"role"`
-	jwt.RegisteredClaims
-}
-
-type contextKey string
-
-var UserContextKey = contextKey("user")
-
 // generateJWT generates a new JWT token for the given username
 func generateJWT(username, role string) (string, error) {
 	expirationTime := time.Now().Add(1 * time.Hour)
-	claims := &UserClaims{
+	claims := &model.UserClaims{
 		Username: username,
 		Role:     role,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -41,8 +32,8 @@ func generateJWT(username, role string) (string, error) {
 }
 
 // verifyJWT checks if the provided token is valid
-func verifyJWT(tokenString string) (*UserClaims, error) {
-	claims := &UserClaims{}
+func verifyJWT(tokenString string) (*model.UserClaims, error) {
+	claims := &model.UserClaims{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
@@ -50,10 +41,6 @@ func verifyJWT(tokenString string) (*UserClaims, error) {
 
 	if err != nil || !token.Valid {
 		log.Fatal(err)
-	} else if claims, ok := token.Claims.(*UserClaims); ok {
-		fmt.Println(claims.Username, claims.Role, claims.RegisteredClaims.Issuer)
-	} else {
-		log.Fatal("unknown claims type, cannot proceed")
 	}
 
 	return claims, nil
@@ -120,7 +107,7 @@ func AuthMiddlewareWithRole(next func(http.ResponseWriter, *http.Request), role 
 		}
 
 		// Add user claims to the request context
-		*r = *r.WithContext(context.WithValue(r.Context(), UserContextKey, claims))
+		*r = *r.WithContext(context.WithValue(r.Context(), _const.UserContextKey, claims))
 
 		// Token is valid, proceed to the next handler
 		next(w, r)

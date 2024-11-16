@@ -7,7 +7,7 @@ import (
 
 type Loan interface {
 	IsDelinquent(username string) (string, error)
-	GetOutStanding() int64
+	GetOutStanding(user string) int64
 	MakePayment(amount int64) error
 }
 
@@ -25,13 +25,21 @@ func NewLoanService(users []model.User, loans []model.Loan, histories []model.Pa
 	}
 }
 
-func (l loan) GetOutStanding() int64 {
+func (l loan) GetOutStanding(username string) int64 {
 	var outstanding int64
-	for _, loan := range l.loanDataSource {
-		for _, user := range l.userDataSource {
-			if loan.UserID == user.ID {
-				outstanding = loan.Amount
-			}
+
+	mapLoans := make(map[string]int64)
+	for _, val := range l.loanDataSource {
+		// didn't include the loan that alr closed
+		// and we assume that 1 cust only able to have 1 loan at the same time
+		if val.Amount != 0 {
+			mapLoans[val.UserID.String()] = val.Amount
+		}
+	}
+
+	for _, user := range l.userDataSource {
+		if val, ok := mapLoans[user.ID.String()]; ok && user.Username == username {
+			outstanding = val
 		}
 	}
 
