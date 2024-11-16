@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -40,7 +39,7 @@ func verifyJWT(tokenString string) (*model.UserClaims, error) {
 	})
 
 	if err != nil || !token.Valid {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	return claims, nil
