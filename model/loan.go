@@ -11,16 +11,6 @@ type Tz struct {
 	DeletedAt time.Time `json:"deleted_at"`
 }
 
-type User struct {
-	ID           uuid.UUID
-	Username     string `json:"name"`
-	Email        string `json:"email"`
-	Status       string `json:"status"`
-	PasswordHash string
-	Role         string `json:"role"`
-	Tz
-}
-
 type Loan struct {
 	ID     uuid.UUID
 	UserID uuid.UUID
