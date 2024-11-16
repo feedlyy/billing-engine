@@ -17,7 +17,7 @@ type User struct {
 	Email        string `json:"email"`
 	Status       string `json:"status"`
 	PasswordHash string
-	Role         string
+	Role         string `json:"role"`
 	Tz
 }
 
