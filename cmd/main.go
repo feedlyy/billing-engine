@@ -14,8 +14,9 @@ func main() {
 	users, loans, paymentHistories := util.GenerateDummyData()
 	svc := service.NewLoanService(users, loans, paymentHistories)
 	handler := handler.NewLoanHandler(svc)
+	middleware := router.NewMiddleware(users)
 	srv := router.NewServer()
-	router.RegistRoutes(*srv, handler)
+	router.RegistRoutes(*srv, handler, middleware)
 
 	logrus.Info("starting application at port 3000")
 	if err := srv.Start(":3000"); err != nil || !errors.Is(err, http.ErrServerClosed) {

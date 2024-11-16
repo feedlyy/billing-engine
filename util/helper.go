@@ -3,11 +3,8 @@ package util
 import (
 	_const "billingg-engine/const"
 	"billingg-engine/model"
-	"crypto/rand"
-	"encoding/base64"
-	"fmt"
 	"github.com/google/uuid"
-	"golang.org/x/crypto/argon2"
+	"golang.org/x/crypto/bcrypt"
 	"time"
 )
 
@@ -134,16 +131,8 @@ var paymentHistories = []model.PaymentHistory{
 }
 
 func GeneratePasswordHash(password string) string {
-	salt := make([]byte, 16)
-	if _, err := rand.Read(salt); err != nil {
-		return ""
-	}
-
-	hash := argon2.IDKey([]byte(password), salt, 1, 64*1024, 4, 32)
-	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
-	b64Hash := base64.RawStdEncoding.EncodeToString(hash)
-
-	return fmt.Sprintf("$argon2id$v=19$m=65536,t=4,p=1$%s$%s", b64Salt, b64Hash)
+	bytes, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(bytes)
 }
 
 func GenerateDummyData() ([]model.User, []model.Loan, []model.PaymentHistory) {
