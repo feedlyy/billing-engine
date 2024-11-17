@@ -17,6 +17,7 @@ type Loan interface {
 	GetOutStanding(user string) int64
 	MakePayment(amount int64, username string) error
 	Schedule(username string) []string
+	Create(username string) error
 }
 
 type loan struct {
@@ -158,6 +159,27 @@ func (l *loan) Schedule(username string) []string {
 	}
 
 	return schedules
+}
+
+func (l *loan) Create(username string) error {
+	user, loan, _, _ := l.BuildUserInfo(username)
+
+	if loan.Amount > 0 {
+		return errors.New(_const.CurrentLoanExistsErr)
+	}
+
+	l.loanDataSource = append(l.loanDataSource, model.Loan{
+		ID:     uuid.New(),
+		UserID: user.ID,
+		Amount: _const.TotalPaymentLoan,
+		Tz: model.Tz{
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			DeletedAt: time.Time{},
+		},
+	})
+
+	return nil
 }
 
 func (l *loan) isNewLoan(user model.User) bool {
