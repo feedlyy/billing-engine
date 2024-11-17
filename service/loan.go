@@ -1,8 +1,13 @@
 package service
 
 import (
+	_const "billingg-engine/const"
 	"billingg-engine/model"
+	"billingg-engine/util"
 	"errors"
+	"github.com/sirupsen/logrus"
+	"math"
+	"time"
 )
 
 type Loan interface {
@@ -47,13 +52,54 @@ func (l loan) GetOutStanding(username string) int64 {
 }
 
 func (l loan) IsDelinquent(username string) (string, error) {
+	var user model.User
 	for _, val := range l.userDataSource {
 		if username == val.Username {
-			return val.Status, nil
+			user = val
+			break
 		}
 	}
 
-	return "", errors.New("user not found")
+	var loan model.Loan
+	for _, val := range l.loanDataSource {
+		if val.UserID == user.ID && val.Amount > 0 {
+			loan = val
+			break
+		}
+	}
+
+	var histories []model.PaymentHistory
+	for _, val := range l.paymentHistoryDataSource {
+		if val.LoanID == loan.ID {
+			histories = append(histories, val)
+		}
+	}
+
+	// if user are not found
+	if (user == model.User{}) {
+		return "", errors.New(_const.UserNotFoundErr)
+	}
+
+	// check if their loan is new
+	if l.isNewLoan(user) {
+		logrus.Infof("user %v is just create his loan this week (%v)", user.Username, loan.CreatedAt.Weekday())
+		return _const.StatusClean, nil
+	}
+
+	// check based on their payment histories and week passed
+	{
+		_, weekLoan := loan.CreatedAt.ISOWeek()
+		_, currentWeek := time.Now().ISOWeek()
+		weekPassed := currentWeek - weekLoan
+		logrus.Info("week passed:", weekPassed)
+		logrus.Info("total payment:", len(histories))
+
+		if int(math.Abs(float64(weekPassed-len(histories)))) >= 2 {
+			return _const.StatusDelinquent, nil
+		}
+	}
+
+	return _const.StatusClean, nil
 }
 
 func (l loan) MakePayment(amount int64) error {
@@ -62,4 +108,15 @@ func (l loan) MakePayment(amount int64) error {
 }
 
 func Schedule() {
+}
+
+func (l loan) isNewLoan(user model.User) bool {
+	for _, val := range l.loanDataSource {
+		if val.Amount > 0 && val.UserID == user.ID {
+			if util.IsInCurrentWeek(val.CreatedAt) {
+				return true
+			}
+		}
+	}
+	return false
 }
