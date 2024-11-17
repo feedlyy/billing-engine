@@ -9,6 +9,7 @@ const (
 	UserContextKey             = contextKey("user")
 	StatusClean                = "Clean"
 	StatusDelinquent           = "Delinquent"
+	TotalPaymentWeek           = 50
 
 	UserNotFoundErr     = "user not found"
 	InsufficientPaidErr = "insufficient amount for pay loan"

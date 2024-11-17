@@ -99,3 +99,14 @@ func (l LoanHandler) Payment(w http.ResponseWriter, r *http.Request) {
 	}
 	util.RespOK(w, Result{})
 }
+
+func (l LoanHandler) ScheduleLoan(w http.ResponseWriter, r *http.Request) {
+	loggedUser, ok := r.Context().Value(_const.UserContextKey).(*model.UserClaims)
+	if !ok {
+		util.RespErr(w, Err{Error: "Failed to retrieve user information"}, http.StatusInternalServerError)
+		return
+	}
+
+	schedules := l.svc.Schedule(loggedUser.Username)
+	util.RespOK(w, schedules)
+}
