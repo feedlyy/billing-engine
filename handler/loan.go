@@ -110,3 +110,27 @@ func (l LoanHandler) ScheduleLoan(w http.ResponseWriter, r *http.Request) {
 	schedules := l.svc.Schedule(loggedUser.Username)
 	util.RespOK(w, schedules)
 }
+
+func (l LoanHandler) CreateLoan(w http.ResponseWriter, r *http.Request) {
+	loggedUser, ok := r.Context().Value(_const.UserContextKey).(*model.UserClaims)
+	if !ok {
+		util.RespErr(w, Err{Error: "Failed to retrieve user information"}, http.StatusInternalServerError)
+		return
+	}
+
+	type Result struct{}
+
+	err := l.svc.Create(loggedUser.Username)
+	if err != nil {
+		switch err.Error() {
+		case _const.CurrentLoanExistsErr:
+			util.RespErr(w, Err{Error: err.Error()}, http.StatusBadRequest)
+			return
+		default:
+			util.RespErr(w, Err{Error: err.Error()}, http.StatusInternalServerError)
+			return
+		}
+	}
+
+	util.RespOK(w, Result{})
+}
