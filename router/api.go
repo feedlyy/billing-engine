@@ -10,4 +10,5 @@ func RegistRoutes(srv Server, handler handler.LoanHandler, m middleware.Middlewa
 	srv.AddRoute("POST", "/login", m.Login)
 	srv.AddRoute("GET", "/outstanding", middleware.AuthMiddlewareWithRole(handler.GetCurrentOutStanding, _const.RoleCustomer))
 	srv.AddRoute("GET", "/check", middleware.AuthMiddlewareWithRole(handler.CheckIsDelinquent, _const.RoleAdmin))
+	srv.AddRoute("POST", "/pay", middleware.AuthMiddlewareWithRole(handler.Payment, _const.RoleCustomer))
 }
