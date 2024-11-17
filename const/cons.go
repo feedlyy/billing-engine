@@ -10,5 +10,7 @@ const (
 	StatusClean                = "Clean"
 	StatusDelinquent           = "Delinquent"
 
-	UserNotFoundErr = "user not found"
+	UserNotFoundErr     = "user not found"
+	InsufficientPaidErr = "insufficient amount for pay loan"
+	AlreadyPaidErr      = "loan already paid this week"
 )

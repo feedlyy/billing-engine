@@ -6,6 +6,7 @@ import (
 	"billingg-engine/service"
 	"billingg-engine/util"
 	"net/http"
+	"strconv"
 )
 
 type Err struct {
@@ -62,4 +63,39 @@ func (l LoanHandler) CheckIsDelinquent(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	util.RespOK(w, Result{Status: status})
+}
+
+func (l LoanHandler) Payment(w http.ResponseWriter, r *http.Request) {
+	loggedUser, ok := r.Context().Value(_const.UserContextKey).(*model.UserClaims)
+	if !ok {
+		util.RespErr(w, Err{Error: "Failed to retrieve user information"}, http.StatusInternalServerError)
+		return
+	}
+
+	amount, err := strconv.Atoi(r.FormValue("amount"))
+	if err != nil {
+		util.RespErr(w, Err{Error: err.Error()}, http.StatusInternalServerError)
+		return
+	}
+
+	type Result struct{}
+
+	err = l.svc.MakePayment(int64(amount), loggedUser.Username)
+	if err != nil {
+		switch err.Error() {
+		case _const.UserNotFoundErr:
+			util.RespErr(w, Err{Error: err.Error()}, http.StatusNotFound)
+			return
+		case _const.InsufficientPaidErr:
+			util.RespErr(w, Err{Error: err.Error()}, http.StatusBadRequest)
+			return
+		case _const.AlreadyPaidErr:
+			util.RespErr(w, Err{Error: err.Error()}, http.StatusBadRequest)
+			return
+		default:
+			util.RespErr(w, Err{Error: err.Error()}, http.StatusInternalServerError)
+			return
+		}
+	}
+	util.RespOK(w, Result{})
 }
