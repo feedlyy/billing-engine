@@ -5,6 +5,7 @@ import (
 	"billingg-engine/model"
 	"billingg-engine/util"
 	"errors"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"math"
@@ -15,6 +16,7 @@ type Loan interface {
 	IsDelinquent(username string) (string, error)
 	GetOutStanding(user string) int64
 	MakePayment(amount int64, username string) error
+	Schedule(username string) []string
 }
 
 type loan struct {
@@ -66,7 +68,8 @@ func (l *loan) IsDelinquent(username string) (string, error) {
 
 	// check based on their payment histories and week passed
 	{
-		_, weekLoan := loan.CreatedAt.ISOWeek()
+		// this weekLoan added 1 week due to first week of created, the system didn't charge the loan to be paid
+		_, weekLoan := loan.CreatedAt.AddDate(0, 0, 7).ISOWeek()
 		_, currentWeek := time.Now().ISOWeek()
 		weekPassed := currentWeek - weekLoan
 		logrus.Info("week passed:", weekPassed)
@@ -121,7 +124,40 @@ func (l *loan) MakePayment(amount int64, username string) error {
 	return nil
 }
 
-func Schedule() {
+func (l *loan) Schedule(username string) []string {
+	user, loan, histories, _ := l.BuildUserInfo(username)
+
+	if len(histories) == _const.TotalPaymentWeek {
+		return []string{"You didn't have any schedule payment loan"}
+	}
+
+	var schedules []string
+	var latestHistory = time.Now() // set default value
+	{
+		_, weekLoan := loan.CreatedAt.AddDate(0, 0, 7).ISOWeek() // add 2 weeks to exclude current week
+		_, currentWeek := time.Now().ISOWeek()
+		weekPassed := currentWeek - weekLoan
+		totalMissed := int(math.Abs(float64(weekPassed - len(histories))))
+
+		if len(histories) != 0 {
+			latestHistory = histories[len(histories)-1].CreatedAt.AddDate(0, 0, 7) // add 1 week to get next week payment
+		}
+		for i := len(histories) + 1; i <= _const.TotalPaymentWeek; i++ {
+			start, end := util.GetCurrentWeek(latestHistory)
+			schedule := fmt.Sprintf("W%d : %v (%v - %v)", i, _const.DefaultPaymentAmount, start.Format("02 January 2006"), end.Format("02 January 2006"))
+
+			// update each week
+			latestHistory = latestHistory.AddDate(0, 0, 7)
+
+			if totalMissed-1 >= (_const.TotalPaymentWeek-i) && !l.isNewLoan(user) {
+				repayment := fmt.Sprintf("%v [Repayment]", schedule)
+				schedule = repayment
+			}
+			schedules = append(schedules, schedule)
+		}
+	}
+
+	return schedules
 }
 
 func (l *loan) isNewLoan(user model.User) bool {

@@ -66,9 +66,9 @@ var loans = []model.Loan{
 	{
 		ID:     uuid.New(),
 		UserID: users[0].ID,
-		Amount: 5390000,
+		Amount: 5500000,
 		Tz: model.Tz{
-			CreatedAt: time.Now().AddDate(0, 0, -21), // which mean is alr on the third week
+			CreatedAt: time.Now().AddDate(0, 0, -21),
 			UpdatedAt: time.Now(),
 			DeletedAt: time.Time{},
 		},
@@ -88,7 +88,7 @@ var loans = []model.Loan{
 		UserID: users[2].ID,
 		Amount: 5280000,
 		Tz: model.Tz{
-			CreatedAt: time.Now().AddDate(0, 0, -14),
+			CreatedAt: time.Now().AddDate(0, 0, -28), // which mean alr 3 week loans schedule
 			UpdatedAt: time.Now(),
 			DeletedAt: time.Time{},
 		},
@@ -111,8 +111,8 @@ var paymentHistories = []model.PaymentHistory{
 		LoanID: loans[2].ID,
 		Amount: _const.DefaultPaymentAmount,
 		Tz: model.Tz{
-			CreatedAt: time.Now().AddDate(0, 0, -12),
-			UpdatedAt: time.Now(),
+			CreatedAt: time.Now().AddDate(0, 0, -18),
+			UpdatedAt: time.Now().AddDate(0, 0, -18),
 			DeletedAt: time.Time{},
 		},
 	},
@@ -122,7 +122,7 @@ var paymentHistories = []model.PaymentHistory{
 		Amount: _const.DefaultPaymentAmount,
 		Tz: model.Tz{
 			CreatedAt: time.Now().AddDate(0, 0, -6),
-			UpdatedAt: time.Now(),
+			UpdatedAt: time.Now().AddDate(0, 0, -6),
 			DeletedAt: time.Time{},
 		},
 	},
@@ -156,4 +156,14 @@ func IsInCurrentWeek(input time.Time) bool {
 	_, inputWeek := localInput.ISOWeek()
 
 	return currentWeek == inputWeek
+}
+
+func GetCurrentWeek(input time.Time) (time.Time, time.Time) {
+	// Calculate the start of the week (Monday 00:01)
+	startOfWeek := input.AddDate(0, 0, int(time.Monday-input.Weekday())).Add(time.Minute)
+
+	// Calculate the end of the week (Sunday 23:59)
+	endOfWeek := startOfWeek.AddDate(0, 0, 5).Add(23 * time.Hour).Add(59 * time.Minute)
+
+	return startOfWeek, endOfWeek
 }
