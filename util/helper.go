@@ -3,8 +3,10 @@ package util
 import (
 	_const "billingg-engine/const"
 	"billingg-engine/model"
+	"encoding/json"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+	"net/http"
 	"time"
 )
 
@@ -14,7 +16,6 @@ var users = []model.User{
 		ID:           uuid.New(),
 		Username:     "charlie12",
 		Email:        "charlie@gmail.com",
-		Status:       "Delinquent",
 		PasswordHash: GeneratePasswordHash("test1"),
 		Tz: model.Tz{
 			CreatedAt: time.Now().AddDate(0, -2, 0),
@@ -27,7 +28,6 @@ var users = []model.User{
 		ID:           uuid.New(),
 		Username:     "bob23",
 		Email:        "bob@gmail.com",
-		Status:       "Clean",
 		PasswordHash: GeneratePasswordHash("test2"),
 		Tz: model.Tz{
 			CreatedAt: time.Now().AddDate(0, -3, 0),
@@ -40,7 +40,6 @@ var users = []model.User{
 		ID:           uuid.New(),
 		Username:     "steven123",
 		Email:        "steven@gmail.com",
-		Status:       "Clean",
 		PasswordHash: GeneratePasswordHash("test3"),
 		Tz: model.Tz{
 			CreatedAt: time.Now().AddDate(0, 0, -7),
@@ -53,7 +52,6 @@ var users = []model.User{
 		ID:           uuid.New(),
 		Username:     "admin123",
 		Email:        "admin@gmail.com",
-		Status:       "Clean",
 		PasswordHash: GeneratePasswordHash("testAdmin"),
 		Tz: model.Tz{
 			CreatedAt: time.Now(),
@@ -81,7 +79,7 @@ var loans = []model.Loan{
 		Amount: 5500000,
 		Tz: model.Tz{
 			CreatedAt: time.Now(),
-			UpdatedAt: time.Time{},
+			UpdatedAt: time.Now(),
 			DeletedAt: time.Time{},
 		},
 	},
@@ -137,4 +135,25 @@ func GeneratePasswordHash(password string) string {
 
 func GenerateDummyData() ([]model.User, []model.Loan, []model.PaymentHistory) {
 	return users, loans, paymentHistories
+}
+
+func RespOK(w http.ResponseWriter, data any) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
+}
+
+func RespErr(w http.ResponseWriter, data any, status int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(data)
+}
+
+func IsInCurrentWeek(input time.Time) bool {
+	now := time.Now().Local()
+	localInput := input.Local()
+
+	_, currentWeek := now.ISOWeek()
+	_, inputWeek := localInput.ISOWeek()
+
+	return currentWeek == inputWeek
 }
