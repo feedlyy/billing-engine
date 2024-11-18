@@ -96,16 +96,6 @@ var loans = []model.Loan{
 }
 
 var paymentHistories = []model.PaymentHistory{
-	//{
-	//	ID:     uuid.New(),
-	//	LoanID: loans[0].ID,
-	//	Amount: _const.DefaultPaymentAmount,
-	//	Tz: model.Tz{
-	//		CreatedAt: time.Now(),
-	//		UpdatedAt: time.Now(),
-	//		DeletedAt: time.Time{},
-	//	},
-	//},
 	{
 		ID:     uuid.New(),
 		LoanID: loans[2].ID,

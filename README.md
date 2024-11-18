@@ -38,14 +38,18 @@ All routes are defined in the router folder, particularly in the api.go file. Be
     - Description: For checking how many the current debt user have
     - Request: nil (get from current logged user) 
     - Response: int how many the current debt is (0 if it's closed or empty)
-- Check Schedule Loan: GET /loan
+- Check Schedule Loan: GET /loan [customer role]
     - Description: Check when user have to pay in week
     - Request: nil (get from current logged user)
     - Response: []string of list weeks
-- Make Payment for loan: POST /loan/payment
+- Make Payment for loan: POST /loan/payment [customer role]
     - Description: Pay for current week debt
     - Request form-data: {amount: string}
     - Response: empty if it's success, error if there's error (like already paid)
+- Make Payment for loan: POST /loan/initiate [customer role]
+  - Description: Create / request new loan
+  - Request: nil (get from current logged user)
+  - Response: empty if it's success, error if there's error (like still have loan)
 
 ### Note
 This application didn't rely on any database, so pre-defined dummy data are already exists in the project, on file:
